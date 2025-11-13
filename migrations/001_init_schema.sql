@@ -1,13 +1,14 @@
 CREATE TABLE teams (
-    team_name VARCHAR(100) PRIMARY KEY
+    team_id SERIAL PRIMARY KEY, 
+    team_name VARCHAR(100) UNIQUE NOT NULL
 );
 
 CREATE TABLE users (
     user_id VARCHAR(100) PRIMARY KEY,
     username VARCHAR(100) NOT NULL,
     is_active BOOLEAN NOT NULL,
-    team_name VARCHAR(100) NOT NULL,
-    FOREIGN KEY (team_name) REFERENCES teams(team_name) ON DELETE CASCADE
+    team_id INTEGER NOT NULL,
+    FOREIGN KEY (team_id) REFERENCES teams(team_id) ON DELETE CASCADE
 );
 
 CREATE TABLE pull_requests (
@@ -28,7 +29,8 @@ CREATE TABLE pr_reviewers (
     FOREIGN KEY (reviewer_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_users_team_active ON users(team_name, is_active);
+CREATE INDEX idx_users_team_active ON users(team_id, is_active); 
 CREATE INDEX idx_pr_author_status ON pull_requests(author_id, status);
 CREATE INDEX idx_pr_reviewers_reviewer ON pr_reviewers(reviewer_id);
 CREATE INDEX idx_pr_status ON pull_requests(status);
+CREATE UNIQUE INDEX idx_teams_name ON teams(team_name); 

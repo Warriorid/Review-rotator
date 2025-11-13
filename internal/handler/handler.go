@@ -21,5 +21,11 @@ func NewHandler(service *service.Service) *Handler {
 func (h *Handler) InitRouts() *gin.Engine {
 	router := gin.New()
 	
+	team := router.Group("/team")
+	{
+		team.POST("/add", h.addTeam)
+		team.GET("/get", h.getTeam)
+	}
+	
 	return router
 }
