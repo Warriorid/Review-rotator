@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"database/sql"
 	"review-rotator/internal/models"
 	"github.com/jmoiron/sqlx"
 )
@@ -79,5 +80,26 @@ func (r *TeamPostgres) GetTeam(teamName string) (*models.Team, error) {
         team.Members = append(team.Members, member)
     }
 
+    return &team, nil
+}
+
+func (r *TeamPostgres) GetTeamByUserID(userID string) (*models.Team, error) {
+    var team models.Team
+    
+    query := `
+        SELECT t.team_id, t.team_name
+        FROM teams t
+        JOIN users u ON u.team_id = t.team_id
+        WHERE u.user_id = $1
+    `
+    
+    err := r.db.QueryRow(query, userID).Scan(&team.TeamID, &team.TeamName)
+    if err != nil {
+        if err == sql.ErrNoRows {
+            return nil, models.ErrNotFound 
+        }
+        return nil, err
+    }
+    
     return &team, nil
 }

@@ -8,6 +8,7 @@ import (
 type Service struct {
 	Team
 	User
+	PullRequest
 }
 
 type Team interface {
@@ -18,10 +19,14 @@ type Team interface {
 type User interface {
 	SetUserActive(userID string, isActive bool) (*models.User, error)
 }
+type PullRequest interface {
+    CreatePullRequest(input models.CreatePRRequest) (*models.PullRequest, error)
+}
 
 func NewService(repos *repository.Repository) *Service {
 	return &Service{
 		Team: NewTeamService(repos.Team),
 		User: NewUserService(repos.User),
+		PullRequest: NewPullRequestService(repos),
 	}
 }

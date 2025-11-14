@@ -31,6 +31,10 @@ func (h *Handler) InitRouts() *gin.Engine {
 	{
 		user.POST("/setIsActive", h.setUserActive)
 	}
+	pr := router.Group("/pullRequest")
+	{
+		pr.POST("/create", h.createPullRequest)
+	}
 
 	return router
 }

@@ -16,3 +16,9 @@ type PullRequestShort struct {
 	AuthorID        string `json:"author_id" binding:"required"`
 	Status          string `json:"status" binding:"required"`
 }
+
+type CreatePRRequest struct {
+    PullRequestID   string `json:"pull_request_id" binding:"required"`
+    PullRequestName string `json:"pull_request_name" binding:"required"`
+    AuthorID        string `json:"author_id" binding:"required"`
+}
