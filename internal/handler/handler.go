@@ -26,6 +26,11 @@ func (h *Handler) InitRouts() *gin.Engine {
 		team.POST("/add", h.addTeam)
 		team.GET("/get", h.getTeam)
 	}
-	
+
+	user := router.Group("/users")
+	{
+		user.POST("/setIsActive", h.setUserActive)
+	}
+
 	return router
 }

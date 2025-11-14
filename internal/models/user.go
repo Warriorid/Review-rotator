@@ -7,9 +7,3 @@ type User struct {
     TeamName string `json:"team_name" db:"team_name"`                    
     IsActive bool   `json:"is_active" db:"is_active" binding:"required"`
 }
-type TeamMember struct {
-    UserID   string `json:"user_id" binding:"required"`
-    Username string `json:"username" binding:"required"`
-    TeamID   int    `json:"team_id" binding:"required"`
-    IsActive bool   `json:"is_active" binding:"required"`
-}
