@@ -20,3 +20,18 @@ func (s *UserService) SetUserActive(userID string, isActive bool) (*models.User,
 	}
 	return user, nil
 }
+
+func (s *UserService) GetUserReviewRequests(userID string) (*models.UserReviewsResponse, error) {
+    if err := s.repo.GetUserByID(userID); err != nil {
+        return nil, models.ErrNotFound
+    }
+    pullRequests, err := s.repo.GetUserReviewRequests(userID)
+    if err != nil {
+        return nil, err
+    }
+
+    return &models.UserReviewsResponse{
+        UserID:       userID,
+        PullRequests: pullRequests,
+    }, nil
+}

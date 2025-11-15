@@ -22,6 +22,7 @@ type User interface {
 	GetActiveTeamMembers(teamID int, excludeUserID string) ([]models.User, error)
     GetUserByID(userID string) error
 	GetUserTeamID(userID string) (int, error)
+	GetUserReviewRequests(userID string) ([]models.PullRequestShort, error)
 }
 
 type PullRequest interface {

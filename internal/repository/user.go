@@ -124,3 +124,40 @@ func (r *UserPostgres) GetUserTeamID(userID string) (int, error) {
     
     return teamID, nil
 }
+
+func (r *UserPostgres) GetUserReviewRequests(userID string) ([]models.PullRequestShort, error) {
+    query := `
+        SELECT pr.pull_request_id, pr.pull_request_name, pr.author_id, pr.status
+        FROM pull_requests pr
+        JOIN pr_reviewers prr ON pr.pull_request_id = prr.pull_request_id
+        WHERE prr.reviewer_id = $1
+        ORDER BY pr.created_at DESC
+    `
+    
+    rows, err := r.db.Query(query, userID)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    var pullRequests []models.PullRequestShort
+    for rows.Next() {
+        var pr models.PullRequestShort
+        err := rows.Scan(
+            &pr.PullRequestID,
+            &pr.PullRequestName,
+            &pr.AuthorID,
+            &pr.Status,
+        )
+        if err != nil {
+            return nil, err
+        }
+        pullRequests = append(pullRequests, pr)
+    }
+
+    if err := rows.Err(); err != nil {
+        return nil, err
+    }
+
+    return pullRequests, nil
+}

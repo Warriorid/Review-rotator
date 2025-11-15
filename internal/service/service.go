@@ -18,6 +18,7 @@ type Team interface {
 
 type User interface {
 	SetUserActive(userID string, isActive bool) (*models.User, error)
+	GetUserReviewRequests(userID string) (*models.UserReviewsResponse, error)
 }
 type PullRequest interface {
     CreatePullRequest(input models.CreatePRRequest) (*models.PullRequest, error)
@@ -28,7 +29,7 @@ type PullRequest interface {
 func NewService(repos *repository.Repository) *Service {
 	return &Service{
 		Team: NewTeamService(repos.Team),
-		User: NewUserService(repos.User),
+		User: NewUserService(repos),
 		PullRequest: NewPullRequestService(repos),
 	}
 }

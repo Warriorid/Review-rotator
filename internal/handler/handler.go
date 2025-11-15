@@ -30,6 +30,7 @@ func (h *Handler) InitRouts() *gin.Engine {
 	user := router.Group("/users")
 	{
 		user.POST("/setIsActive", h.setUserActive)
+		user.GET("/getReview", h.getUserReviews)
 	}
 	pr := router.Group("/pullRequest")
 	{
