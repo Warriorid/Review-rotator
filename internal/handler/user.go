@@ -3,14 +3,8 @@ package handler
 import (
 	"net/http"
 	"review-rotator/internal/models"
-
 	"github.com/gin-gonic/gin"
 )
-
-type SetUserActiveRequest struct {
-	UserID   string `json:"user_id" binding:"required"`
-	IsActive bool   `json:"is_active"`
-}
 
 func (h *Handler) setUserActive(c *gin.Context) {
     adminToken := c.GetHeader("X-Admin-Token")
@@ -22,7 +16,7 @@ func (h *Handler) setUserActive(c *gin.Context) {
         return
     }
 
-    var input SetUserActiveRequest
+    var input models.SetUserActiveRequest
 	if err := c.BindJSON(&input); err != nil {
 		errorResponse := models.ErrorResponse{}
 		errorResponse.Error.Code = "INVALID_REQUEST"
@@ -42,7 +36,6 @@ func (h *Handler) setUserActive(c *gin.Context) {
 			errorCode = "NOT_FOUND"
 			statusCode = http.StatusNotFound
 		}
-
 		errorResponse.Error.Code = errorCode
 		errorResponse.Error.Message = err.Error()
 		c.JSON(statusCode, errorResponse)

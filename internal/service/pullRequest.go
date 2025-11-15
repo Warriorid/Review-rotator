@@ -1,7 +1,6 @@
 package service
 
 import (
-    "math/rand"
     "review-rotator/internal/models"
     "review-rotator/internal/repository"
 )
@@ -40,47 +39,24 @@ func (s *PullRequestService) MergePullRequest(pullRequestID string) (*models.Pul
     }
     return pr, nil
 }
-
-func (s *PullRequestService) validatePRCreation(input models.CreatePRRequest) error {
-    exists, err := s.repo.PullRequest.PRExists(input.PullRequestID)
+func (s *PullRequestService) ReassignReviewer(input models.ReassignReviewerRequest) (*models.ReassignReviewerResponse, error) {
+    pr, err := s.validatePRForReassignment(input.PullRequestID)
     if err != nil {
-        return err
+        return nil, err
     }
-    if exists {
-        return models.ErrPRExists
+    if err := s.validateReviewerAssignment(pr, input.OldUserID); err != nil {
+        return nil, err
     }
-    if err := s.repo.User.GetUserByID(input.AuthorID); err != nil {
-        return models.ErrNotFound
-    }
-
-    return nil
-}
-
-func (s *PullRequestService) getAvailableReviewers(authorID string) ([]models.User, error) {
-    team, err := s.repo.Team.GetTeamByUserID(authorID)
+    newReviewer, err := s.findReplacementCandidate(pr, input.OldUserID)
     if err != nil {
-        return nil, models.ErrNotFound
+        return nil, err
     }
-
-    return s.repo.User.GetActiveTeamMembers(team.TeamID, authorID)
-}
-
-func selectRandomReviewers(users []models.User, maxReviewers int) []string {
-    if len(users) == 0 {
-        return []string{}
+    updatedPR, err := s.repo.PullRequest.ReassignReviewer(input.PullRequestID, input.OldUserID, newReviewer)
+    if err != nil {
+        return nil, err
     }
-    count := len(users)
-    if count > maxReviewers {
-        count = maxReviewers
-    }
-    availableUsers := make([]models.User, len(users))
-    copy(availableUsers, users)
-    
-    reviewers := make([]string, count)
-    for i := 0; i < count; i++ {
-        randomIndex := rand.Intn(len(availableUsers))
-        reviewers[i] = availableUsers[randomIndex].UserID
-        availableUsers = append(availableUsers[:randomIndex], availableUsers[randomIndex+1:]...)
-    }
-    return reviewers
+    return &models.ReassignReviewerResponse{
+        PR:         updatedPR,
+        ReplacedBy: newReviewer,
+    }, nil
 }

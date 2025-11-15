@@ -35,6 +35,7 @@ func (h *Handler) InitRouts() *gin.Engine {
 	{
 		pr.POST("/create", h.createPullRequest)
 		pr.POST("/merge", h.mergePullRequest)
+		pr.POST("/reassign", h.reassignReviewer)
 	}
 
 	return router

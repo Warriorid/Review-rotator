@@ -22,6 +22,7 @@ type User interface {
 type PullRequest interface {
     CreatePullRequest(input models.CreatePRRequest) (*models.PullRequest, error)
 	MergePullRequest(pullRequestID string) (*models.PullRequest, error)
+	ReassignReviewer(input models.ReassignReviewerRequest) (*models.ReassignReviewerResponse, error)
 }
 
 func NewService(repos *repository.Repository) *Service {

@@ -109,3 +109,18 @@ func (r *UserPostgres) GetActiveTeamMembers(teamID int, excludeUserID string) ([
 
     return users, nil
 }
+
+func (r *UserPostgres) GetUserTeamID(userID string) (int, error) {
+    var teamID int
+    query := `SELECT team_id FROM users WHERE user_id = $1`
+    
+    err := r.db.QueryRow(query, userID).Scan(&teamID)
+    if err != nil {
+        if err == sql.ErrNoRows {
+            return 0, models.ErrNotFound
+        }
+        return 0, err
+    }
+    
+    return teamID, nil
+}

@@ -26,3 +26,13 @@ type CreatePRRequest struct {
 type MergePRRequest struct {
     PullRequestID string `json:"pull_request_id" binding:"required"`
 }
+
+type ReassignReviewerRequest struct {
+    PullRequestID string `json:"pull_request_id" binding:"required"`
+    OldUserID     string `json:"old_user_id" binding:"required"`
+}
+
+type ReassignReviewerResponse struct {
+    PR         *PullRequest `json:"pr" binding:"required"`
+    ReplacedBy string       `json:"replaced_by" binding:"required"`
+}

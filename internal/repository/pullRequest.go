@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"review-rotator/internal/models"
 	"time"
-
 	"github.com/jmoiron/sqlx"
 )
 
@@ -119,4 +118,42 @@ func (r *PullRequestPostgres) GetPullRequestByID(pullRequestID string) (*models.
     }
 
     return &pr, nil
+}
+
+func (r *PullRequestPostgres) ReassignReviewer(pullRequestID string, oldReviewerID string, newReviewerID string) (*models.PullRequest, error) {
+    tx, err := r.db.Beginx()
+    if err != nil {
+        return nil, err
+    }
+    defer tx.Rollback()
+    var exists bool
+    err = tx.QueryRow(
+        "SELECT EXISTS(SELECT 1 FROM pr_reviewers WHERE pull_request_id = $1 AND reviewer_id = $2)",
+        pullRequestID, oldReviewerID,
+    ).Scan(&exists)
+    if err != nil {
+        return nil, err
+    }
+    if !exists {
+        return nil, models.ErrNotAssigned
+    }
+    _, err = tx.Exec(
+        "DELETE FROM pr_reviewers WHERE pull_request_id = $1 AND reviewer_id = $2",
+        pullRequestID, oldReviewerID,
+    )
+    if err != nil {
+        return nil, err
+    }
+    _, err = tx.Exec(
+        "INSERT INTO pr_reviewers (pull_request_id, reviewer_id) VALUES ($1, $2)",
+        pullRequestID, newReviewerID,
+    )
+    if err != nil {
+        return nil, err
+    }
+
+    if err := tx.Commit(); err != nil {
+        return nil, err
+    }
+    return r.GetPullRequestByID(pullRequestID)
 }

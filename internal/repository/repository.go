@@ -21,6 +21,7 @@ type User interface {
 	SetUserActive(userID string, isActive bool) (*models.User, error)
 	GetActiveTeamMembers(teamID int, excludeUserID string) ([]models.User, error)
     GetUserByID(userID string) error
+	GetUserTeamID(userID string) (int, error)
 }
 
 type PullRequest interface {
@@ -28,6 +29,7 @@ type PullRequest interface {
 	PRExists(pullRequestID string) (bool, error)
 	GetPullRequestByID(pullRequestID string) (*models.PullRequest, error)
     MergePullRequest(pullRequestID string) (*models.PullRequest, error)
+	ReassignReviewer(pullRequestID string, oldReviewerID string, newReviewerID string) (*models.PullRequest, error)
 }
 
 
