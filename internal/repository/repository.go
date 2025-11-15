@@ -10,6 +10,7 @@ type Repository struct {
 	Team
 	User
 	PullRequest
+	Statistics
 }
 
 type Team interface {
@@ -33,11 +34,16 @@ type PullRequest interface {
 	ReassignReviewer(pullRequestID string, oldReviewerID string, newReviewerID string) (*models.PullRequest, error)
 }
 
+type Statistics interface{
+	GetReviewStats() (*models.StatsResponse, error)
+}
+
 
 func NewRepository(db *sqlx.DB) *Repository {
     return &Repository{
 		Team: NewTeamPostgres(db),
 		User: NewUserPostgres(db),
 		PullRequest: NewPullRequestPostgres(db),
+		Statistics: NewStatisticsPostgres(db),
     }
 }

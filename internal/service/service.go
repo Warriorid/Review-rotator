@@ -9,6 +9,7 @@ type Service struct {
 	Team
 	User
 	PullRequest
+	Statistics
 }
 
 type Team interface {
@@ -26,10 +27,15 @@ type PullRequest interface {
 	ReassignReviewer(input models.ReassignReviewerRequest) (*models.ReassignReviewerResponse, error)
 }
 
+type Statistics interface{
+	GetReviewStats() (*models.StatsResponse, error)
+}
+
 func NewService(repos *repository.Repository) *Service {
 	return &Service{
 		Team: NewTeamService(repos.Team),
-		User: NewUserService(repos),
+		User: NewUserService(repos.User),
 		PullRequest: NewPullRequestService(repos),
+		Statistics: NewStatisticsService(repos.Statistics),
 	}
 }

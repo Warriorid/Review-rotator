@@ -38,6 +38,10 @@ func (h *Handler) InitRouts() *gin.Engine {
 		pr.POST("/merge", h.mergePullRequest)
 		pr.POST("/reassign", h.reassignReviewer)
 	}
+	stats := router.Group("/stats")
+    {
+        stats.GET("/reviews", h.getStats)
+    }
 
 	return router
 }
