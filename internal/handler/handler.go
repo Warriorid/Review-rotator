@@ -34,6 +34,7 @@ func (h *Handler) InitRouts() *gin.Engine {
 	pr := router.Group("/pullRequest")
 	{
 		pr.POST("/create", h.createPullRequest)
+		pr.POST("/merge", h.mergePullRequest)
 	}
 
 	return router

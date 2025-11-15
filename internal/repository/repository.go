@@ -26,6 +26,8 @@ type User interface {
 type PullRequest interface {
     CreatePullRequest(pr models.PullRequest, reviewers []string) (*models.PullRequest, error)
 	PRExists(pullRequestID string) (bool, error)
+	GetPullRequestByID(pullRequestID string) (*models.PullRequest, error)
+    MergePullRequest(pullRequestID string) (*models.PullRequest, error)
 }
 
 

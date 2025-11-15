@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"database/sql"
 	"review-rotator/internal/models"
 	"time"
 
@@ -28,47 +29,93 @@ func (r *PullRequestPostgres) CreatePullRequest(pr models.PullRequest, reviewers
         return nil, err
     }
     defer tx.Rollback()
-
     query := `
         INSERT INTO pull_requests (pull_request_id, pull_request_name, author_id, status, created_at)
         VALUES ($1, $2, $3, $4, $5)
-        RETURNING pull_request_id, pull_request_name, author_id, status, created_at
     `
-    
     now := time.Now().Format(time.RFC3339)
-    err = tx.QueryRow(
-        query,
+    _, err = tx.Exec(query, 
         pr.PullRequestID,
         pr.PullRequestName,
         pr.AuthorID,
         pr.Status,
         now,
-    ).Scan(
+    )
+    if err != nil {
+        return nil, err
+    }
+    reviewerQuery := `INSERT INTO pr_reviewers (pull_request_id, reviewer_id) VALUES ($1, $2)`
+    for _, reviewerID := range reviewers {
+        _, err = tx.Exec(reviewerQuery, pr.PullRequestID, reviewerID)
+        if err != nil {
+            return nil, err
+        }
+    }
+    if err := tx.Commit(); err != nil {
+        return nil, err
+    }
+    pr.CreatedAt = &now
+    pr.AssignedReviewers = reviewers
+    return &pr, nil
+}
+
+func (r *PullRequestPostgres) MergePullRequest(pullRequestID string) (*models.PullRequest, error) {
+    pr, err := r.GetPullRequestByID(pullRequestID)
+    if err != nil {
+        return nil, err
+    }
+    if pr.Status == "MERGED" {
+        return pr, nil
+    }
+    now := time.Now().Format(time.RFC3339)
+    _, err = r.db.Exec(
+        "UPDATE pull_requests SET status = 'MERGED', merged_at = $1 WHERE pull_request_id = $2",
+        now, pullRequestID,
+    )
+    if err != nil {
+        return nil, err
+    }
+    return r.GetPullRequestByID(pullRequestID)
+}
+
+func (r *PullRequestPostgres) GetPullRequestByID(pullRequestID string) (*models.PullRequest, error) {
+    var pr models.PullRequest
+    query := `
+        SELECT pull_request_id, pull_request_name, author_id, status, created_at, merged_at
+        FROM pull_requests 
+        WHERE pull_request_id = $1
+    `
+    err := r.db.QueryRow(query, pullRequestID).Scan(
         &pr.PullRequestID,
         &pr.PullRequestName,
         &pr.AuthorID,
         &pr.Status,
         &pr.CreatedAt,
+        &pr.MergedAt,
     )
+    if err != nil {
+        if err == sql.ErrNoRows {
+            return nil, models.ErrNotFound
+        }
+        return nil, err
+    }
+    reviewersQuery := `
+        SELECT reviewer_id 
+        FROM pr_reviewers 
+        WHERE pull_request_id = $1
+    `
+    rows, err := r.db.Query(reviewersQuery, pullRequestID)
     if err != nil {
         return nil, err
     }
+    defer rows.Close()
 
-    for _, reviewerID := range reviewers {
-        _, err = tx.Exec(
-            "INSERT INTO pr_reviewers (pull_request_id, reviewer_id) VALUES ($1, $2)",
-            pr.PullRequestID,
-            reviewerID,
-        )
-        if err != nil {
+    for rows.Next() {
+        var reviewerID string
+        if err := rows.Scan(&reviewerID); err != nil {
             return nil, err
         }
-    }
-
-    pr.AssignedReviewers = reviewers
-
-    if err := tx.Commit(); err != nil {
-        return nil, err
+        pr.AssignedReviewers = append(pr.AssignedReviewers, reviewerID)
     }
 
     return &pr, nil

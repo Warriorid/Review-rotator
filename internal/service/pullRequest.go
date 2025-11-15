@@ -15,32 +15,14 @@ func NewPullRequestService(repo *repository.Repository) *PullRequestService {
 }
 
 func (s *PullRequestService) CreatePullRequest(input models.CreatePRRequest) (*models.PullRequest, error) {
-    
-	exists, err := s.repo.PullRequest.PRExists(input.PullRequestID)
+    if err := s.validatePRCreation(input); err != nil {
+        return nil, err
+    }
+    teamMembers, err := s.getAvailableReviewers(input.AuthorID)
     if err != nil {
         return nil, err
     }
-    if exists {
-        return nil, models.ErrPRExists	//409
-    }
-
-    err = s.repo.User.GetUserByID(input.AuthorID)
-    if err != nil {
-        return nil, models.ErrNotFound	//404
-    }
-
-    team, err := s.repo.Team.GetTeamByUserID(input.AuthorID)
-    if err != nil {
-        return nil, models.ErrNotFound	//404
-    }
-
-    teamMembers, err := s.repo.User.GetActiveTeamMembers(team.TeamID, input.AuthorID)
-    if err != nil {
-        return nil, err
-    }
-
     reviewers := selectRandomReviewers(teamMembers, 2)
-
     pr := models.PullRequest{
         PullRequestID:   input.PullRequestID,
         PullRequestName: input.PullRequestName,
@@ -48,11 +30,39 @@ func (s *PullRequestService) CreatePullRequest(input models.CreatePRRequest) (*m
         Status:          "OPEN",
         AssignedReviewers: reviewers,
     }
-    createdPR, err := s.repo.PullRequest.CreatePullRequest(pr, reviewers)
+    return s.repo.PullRequest.CreatePullRequest(pr, reviewers)
+}
+
+func (s *PullRequestService) MergePullRequest(pullRequestID string) (*models.PullRequest, error) {
+    pr, err := s.repo.PullRequest.MergePullRequest(pullRequestID)
     if err != nil {
         return nil, err
     }
-    return createdPR, nil
+    return pr, nil
+}
+
+func (s *PullRequestService) validatePRCreation(input models.CreatePRRequest) error {
+    exists, err := s.repo.PullRequest.PRExists(input.PullRequestID)
+    if err != nil {
+        return err
+    }
+    if exists {
+        return models.ErrPRExists
+    }
+    if err := s.repo.User.GetUserByID(input.AuthorID); err != nil {
+        return models.ErrNotFound
+    }
+
+    return nil
+}
+
+func (s *PullRequestService) getAvailableReviewers(authorID string) ([]models.User, error) {
+    team, err := s.repo.Team.GetTeamByUserID(authorID)
+    if err != nil {
+        return nil, models.ErrNotFound
+    }
+
+    return s.repo.User.GetActiveTeamMembers(team.TeamID, authorID)
 }
 
 func selectRandomReviewers(users []models.User, maxReviewers int) []string {
