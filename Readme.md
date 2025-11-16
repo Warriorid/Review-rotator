@@ -21,7 +21,6 @@
 ## Примеры запросов
 - [Добавление команды с участниками](#team_add)
 - [Получение команды с участниками](#team_get)
-- [Просмотр пользовательских данных](#get_user)
 - [Установка флага активности пользователя](#users_set_is_active)
 - [Создание Pull Request](#create_pull_request)
 - [Merge Pull Request](#merge_pull_request)
