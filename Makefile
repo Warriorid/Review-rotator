@@ -19,7 +19,7 @@ ps:
 	docker-compose ps
 
 load-test:
-	k6 run load-test.js
+	k6 run tests/load-test.js
 
 help:
 	@echo "Available commands:"
