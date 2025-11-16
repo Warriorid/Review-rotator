@@ -6,7 +6,7 @@ type PullRequest struct {
 	AuthorID         string   `json:"author_id" binding:"required"`
 	Status           string   `json:"status" binding:"required"`
 	AssignedReviewers []string `json:"assigned_reviewers" binding:"required"`
-    CreatedAt        *string  `json:"createdAt,omitempty"`
+    CreatedAt        *string  `json:"-"`
     MergedAt         *string  `json:"mergedAt,omitempty"`
 }
 

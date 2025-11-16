@@ -13,7 +13,7 @@ refresh: down
 	docker-compose up --build -d
 
 clean: down
-	docker system prune -f
+	docker-compose down -v
 
 ps:
 	docker-compose ps
